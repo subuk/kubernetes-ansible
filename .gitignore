@@ -1,0 +1,8 @@
+/pki/
+/kube-binaries/
+*.tar.gz
+/EasyRSA-*
+/easyrsa
+/x509-types
+/openssl-easyrsa.cnf
+admin.kubeconfig

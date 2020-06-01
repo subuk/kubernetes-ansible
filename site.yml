@@ -1,0 +1,22 @@
+- name: Group hosts by assigned roles
+  hosts: all
+  gather_facts: no
+  tasks:
+    - group_by: {key: "role_{{ item }}"}
+      loop: "{{ roles | default([]) }}"
+      tags: always
+      changed_when: false
+      check_mode: no
+
+- import_playbook: setup_local_certificates.yml
+- import_playbook: setup_yum.yml
+- import_playbook: setup_etcd.yml
+- import_playbook: setup_docker.yml
+- import_playbook: setup_kubernetes_apiserver.yml
+- import_playbook: setup_kube_controller_manager.yml
+- import_playbook: setup_kube_scheduler.yml
+- import_playbook: setup_kubelet.yml
+- import_playbook: setup_kube_proxy.yml
+- import_playbook: setup_local_kubeconfig.yml
+- import_playbook: setup_k8s_apiserver_roles.yml
+- import_playbook: setup_k8s_coredns.yml

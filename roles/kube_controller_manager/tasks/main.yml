@@ -1,0 +1,31 @@
+- name: Copy binary
+  copy: {src: kube-binaries/kubernetes/server/bin/kube-controller-manager, dest: /usr/bin/kube-controller-manager, mode: 0755, owner: root, group: root}
+
+- name: Copy sysconfig
+  template: {src: kube-controller-manager.sysconfig.j2, dest: /etc/sysconfig/kube-controller-manager}
+  notify: restart kube-controller-manager
+
+- name: Copy systemd service
+  copy: {src: kube-controller-manager.service, dest: /etc/systemd/system/kube-controller-manager.service}
+  notify: restart kube-controller-manager
+
+- name: Ensure /etc/kubernetes present
+  file: {path: /etc/kubernetes, state: directory}
+
+- name: Generate kubeconfig
+  template: {src: kubeconfig.j2, dest: /etc/kubernetes/kube-controller-manager.kubeconfig}
+  notify: restart kube-controller-manager
+
+- name: Copy CA certificate
+  copy: {content: "{{ kube_controller_manager_ca_cert }}", dest: /etc/kubernetes/ca.pem}
+  notify: restart kube-controller-manager
+
+- name: Copy CA key
+  copy: {content: "{{ kube_controller_manager_ca_key }}", dest: /etc/kubernetes/ca.key}
+  notify: restart kube-controller-manager
+
+- name: Copy service-account key
+  copy: {content: "{{ kube_controller_manager_service_account_key }}", dest: /etc/kubernetes/service-account.key}
+
+- name: Start
+  systemd: {state: started, name: kube-controller-manager, daemon_reload: yes, enabled: yes}

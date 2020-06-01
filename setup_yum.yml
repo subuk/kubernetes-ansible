@@ -1,0 +1,4 @@
+- name: Configure yum
+  hosts: all
+  roles:
+    - {role: yum, tags: yum}

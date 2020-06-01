@@ -1,0 +1,16 @@
+roles:
+  - docker
+  - kubelet
+  - kube_proxy
+
+kubelet_ca_cert: '{{ lookup("file", "pki/ca.crt") }}'
+kubelet_host_cert: '{{ lookup("file", "pki/issued/system:node:" + inventory_hostname_short + ".crt") }}'
+kubelet_host_key: '{{ lookup("file", "pki/private/system:node:" + inventory_hostname_short + ".key") }}'
+kubelet_server: https://192.168.29.81:6443
+
+kube_proxy_ca_cert: '{{ lookup("file", "pki/ca.crt") }}'
+kube_proxy_host_cert: '{{ lookup("file", "pki/issued/system:kube-proxy.crt") }}'
+kube_proxy_host_key: '{{ lookup("file", "pki/private/system:kube-proxy.key") }}'
+kube_proxy_server: https://192.168.29.81:6443
+kube_proxy_mode: ipvs
+kube_proxy_cluster_cidr: 10.200.0.0/16

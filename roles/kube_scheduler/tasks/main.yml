@@ -1,0 +1,23 @@
+- name: Copy binary
+  copy: {src: kube-binaries/kubernetes/server/bin/kube-scheduler, dest: /usr/bin/kube-scheduler, mode: "0755", owner: root, group: root}
+
+- name: Copy sysconfig
+  template: {src: kube-scheduler.sysconfig.j2, dest: /etc/sysconfig/kube-scheduler}
+  notify: restart kube-scheduler
+
+- name: Copy systemd service
+  copy: {src: kube-scheduler.service, dest: /etc/systemd/system/kube-scheduler.service}
+  notify: restart kube-scheduler
+
+- name: Ensure /etc/kubernetes present
+  file: {path: /etc/kubernetes, state: directory}
+
+- name: Install kube-scheduler.yaml
+  template: {src: kube-scheduler.yaml.j2, dest: /etc/kubernetes/kube-scheduler.yaml}
+
+- name: Generate kubeconfig
+  template: {src: kubeconfig.j2, dest: /etc/kubernetes/kube-scheduler.kubeconfig}
+  notify: restart kube-scheduler
+
+- name: Start
+  systemd: {state: started, name: kube-scheduler, daemon_reload: yes, enabled: yes}

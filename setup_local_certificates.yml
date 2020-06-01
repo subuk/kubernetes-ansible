@@ -1,0 +1,99 @@
+- hosts: localhost
+  connection: local
+  become: no
+  environment:
+    EASYRSA_CA_EXPIRE: "3650"
+    EASYRSA_CERT_EXPIRE: "825"
+    EASYRSA_REQ_ORG: AnsibleKube
+    EASYRSA_REQ_OU: Kubernetes Operations
+    EASYRSA_REQ_COUNTRY: RU
+    EASYRSA_REQ_PROVINCE: Any
+    EASYRSA_REQ_CITY: Any
+    EASYRSA_REQ_EMAIL: admin@kube.example.org
+    EASYRSA_DN: org
+  tasks:
+    - name: Download easyrsa
+      get_url:
+        url: https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.7/EasyRSA-3.0.7.tgz
+        dest: ./EasyRSA-3.0.7.tgz
+        checksum: sha1:0f08ae1b5fc32c9867d3623f13c2520082af6ca2
+
+    - name: Extract easyrsa script
+      shell: tar xf ./EasyRSA-3.0.7.tgz EasyRSA-3.0.7/{{ item }} && mv EasyRSA-3.0.7/{{ item }} ./ && rmdir EasyRSA-3.0.7
+      args:
+        creates: "{{ item }}"
+      loop: [easyrsa, openssl-easyrsa.cnf, x509-types]
+
+    - name: Init PKI
+      shell: ./easyrsa init-pki
+      args:
+        creates: pki/
+
+    - name: Build CA
+      shell: ./easyrsa --batch build-ca nopass
+      environment:
+        EASYRSA_REQ_CN: AnsibleKubeCA
+      args:
+        creates: pki/ca.crt
+
+    - name: Issue etcd server certificates
+      shell: ./easyrsa --batch --subject-alt-name="$SUBJECT_ALT_NAMES" build-serverClient-full {{ item }}-etcd nopass
+      environment:
+        SUBJECT_ALT_NAMES: "IP:{{ hostvars[item].ansible_ssh_host }},DNS:{{ item }}"
+      args:
+        creates: pki/issued/{{ item }}-etcd.crt
+      loop: "{{ groups.masters }}"
+
+    - name: Issue service-accounts certificate
+      shell: ./easyrsa --batch build-serverClient-full service-accounts nopass
+      args:
+        creates: pki/issued/service-accounts.crt
+
+    - name: Issue admin certificate
+      shell: ./easyrsa --batch build-serverClient-full admin nopass
+      environment:
+        EASYRSA_REQ_ORG: system:masters
+      args:
+        creates: pki/issued/admin.crt
+
+    - name: Issue kube-controller-manager certificate
+      shell: ./easyrsa --batch build-serverClient-full system:kube-controller-manager nopass
+      environment:
+        EASYRSA_REQ_ORG: system:kube-controller-manager
+      args:
+        creates: pki/issued/system:kube-controller-manager.crt
+
+    - name: Issue kube-proxy certificate
+      shell: ./easyrsa --batch build-serverClient-full system:kube-proxy nopass
+      environment:
+        EASYRSA_REQ_ORG: system:node-proxier
+      args:
+        creates: pki/issued/system:kube-proxy.crt
+
+    - name: Issue kube-scheduler certificate
+      shell: ./easyrsa --batch build-serverClient-full system:kube-scheduler nopass
+      environment:
+        EASYRSA_REQ_ORG: system:kube-scheduler
+      args:
+        creates: pki/issued/system:kube-scheduler.crt
+
+    - name: Issue kube-apiserver certificate
+      shell: ./easyrsa --batch --subject-alt-name="$SUBJECT_ALT_NAMES" build-serverClient-full kube-apiserver nopass
+      environment:
+        SUBJECT_ALT_NAMES: "IP:127.0.0.1,IP:10.32.0.1,IP:192.168.29.81,IP:192.168.29.82,IP:192.168.29.83,DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.cluster,DNS:kubernetes.svc.cluster.local"
+      args:
+        creates: pki/issued/kube-apiserver.crt
+
+    - name: Issue kubelet certificates
+      shell: ./easyrsa --batch --subject-alt-name="$SUBJECT_ALT_NAMES" build-serverClient-full system:node:{{ item }} nopass
+      environment:
+        EASYRSA_REQ_ORG: system:nodes
+        SUBJECT_ALT_NAMES: "IP:{{ hostvars[item].ansible_ssh_host }},DNS:{{ item }}"
+      args:
+        creates: pki/issued/system:node:{{ item }}.crt
+      loop: "{{ groups.nodes + groups.masters }}"
+
+    - name: Generate crl
+      shell: ./easyrsa gen-crl
+      args:
+        creates: pki/crl.pem

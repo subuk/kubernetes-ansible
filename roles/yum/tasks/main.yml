@@ -1,0 +1,10 @@
+- name: Configure repository files
+  template:
+    src: '{{ item.name }}.repo.j2'
+    dest: '/etc/yum.repos.d/{{ item.dest_filename | default(item.name+".repo") }}'
+  with_items: '{{ (yum_repos | default([])) + (yum_repos_extra | default([])) }}'
+  loop_control:
+    label: '{{ item.name }}'
+
+- name: Install repository packages
+  yum: {name: '{{ (yum_packages | default([])) + (yum_packages_extra | default([])) }}', state: present}

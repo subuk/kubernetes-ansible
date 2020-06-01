@@ -1,0 +1,21 @@
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+authentication:
+  anonymous:
+    enabled: false
+  webhook:
+    enabled: true
+  x509:
+    clientCAFile: "/etc/kubelet/ca.pem"
+authorization:
+  mode: Webhook
+cgroupDriver: systemd
+clusterDomain: "cluster.local"
+clusterDNS:
+  - "10.32.0.10"
+podCIDR: "{{ kubelet_pod_cidr }}"
+runtimeCgroups: /systemd/system.slice
+kubeletCgroups: /systemd/system.slice
+runtimeRequestTimeout: "15m"
+tlsCertFile: "/etc/kubelet/host.crt"
+tlsPrivateKeyFile: "/etc/kubelet/host.key"

@@ -1,0 +1,2 @@
+kubelet_pod_cidr: 10.200.81.0/24
+docker_bip: 10.200.81.1/24

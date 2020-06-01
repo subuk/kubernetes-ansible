@@ -1,0 +1,6 @@
+[masters]
+k8s-1 ansible_ssh_host=192.168.29.81
+k8s-2 ansible_ssh_host=192.168.29.82
+k8s-3 ansible_ssh_host=192.168.29.83
+
+[nodes]

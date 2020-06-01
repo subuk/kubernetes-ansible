@@ -1,0 +1,4 @@
+- name: Configure kuberneted apiserver
+  hosts: role_kube_apiserver
+  roles:
+    - {role: kube_apiserver, tags: kube_apiserver}

@@ -1,0 +1,40 @@
+- name: Install helper tools
+  yum: {name: "{{ item }}", state: present}
+  loop: [ipvsadm, socat, ipset]
+
+- name: Copy binary
+  copy: {src: kube-binaries/kubernetes/server/bin/kube-proxy, dest: /usr/bin/kube-proxy, mode: "0755", owner: root, group: root}
+
+- name: Copy sysconfig
+  template: {src: kube-proxy.sysconfig.j2, dest: /etc/sysconfig/kube-proxy}
+  notify: restart kube-proxy
+
+- name: Copy systemd service
+  copy: {src: kube-proxy.service, dest: /etc/systemd/system/kube-proxy.service}
+  notify: restart kube-proxy
+
+- name: Ensure /etc/kube-proxy present
+  file: {path: /etc/kube-proxy, state: directory}
+
+- name: Install kube-proxy.yaml
+  template: {src: kube-proxy.yaml.j2, dest: /etc/kube-proxy/kube-proxy.yaml}
+  notify: restart kube-proxy
+
+- name: Generate kubeconfig
+  template: {src: kubeconfig.j2, dest: /etc/kube-proxy/kubeconfig}
+  notify: restart kube-proxy
+
+- name: Copy kube-proxy CA certificate
+  copy: {content: "{{ kube_proxy_ca_cert }}", dest: /etc/kube-proxy/ca.pem}
+  notify: restart kube-proxy
+
+- name: Copy host certificate
+  copy: {content: "{{ kube_proxy_host_cert }}", dest: /etc/kube-proxy/host.crt}
+  notify: restart kube-proxy
+
+- name: Copy host key
+  copy: {content: "{{ kube_proxy_host_key }}", dest: /etc/kube-proxy/host.key}
+  notify: restart kube-proxy
+
+- name: Start service
+  systemd: {state: started, name: kube-proxy, daemon_reload: yes, enabled: yes}

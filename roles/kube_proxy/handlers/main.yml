@@ -1,0 +1,2 @@
+- name: restart kube-proxy
+  systemd: {state: restarted, name: kube-proxy, daemon_reload: yes}

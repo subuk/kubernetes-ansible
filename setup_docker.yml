@@ -1,0 +1,4 @@
+- name: Configure docker
+  hosts: role_docker
+  roles:
+    - {role: docker, tags: docker}

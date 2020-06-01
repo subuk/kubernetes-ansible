@@ -1,0 +1,36 @@
+- name: Copy binary
+  copy: {src: kube-binaries/kubernetes/server/bin/kubelet, dest: /usr/bin/kubelet, mode: "0755", owner: root, group: root}
+
+- name: Copy sysconfig
+  template: {src: kubelet.sysconfig.j2, dest: /etc/sysconfig/kubelet}
+  notify: restart kubelet
+
+- name: Copy systemd service
+  copy: {src: kubelet.service, dest: /etc/systemd/system/kubelet.service}
+  notify: restart kubelet
+
+- name: Ensure /etc/kubelet present
+  file: {path: /etc/kubelet, state: directory}
+
+- name: Install kubelet.yaml
+  template: {src: kubelet.yaml.j2, dest: /etc/kubelet/kubelet.yaml}
+  notify: restart kubelet
+
+- name: Generate kubeconfig
+  template: {src: kubeconfig.j2, dest: /etc/kubelet/kubeconfig}
+  notify: restart kubelet
+
+- name: Copy kubelet CA certificate
+  copy: {content: "{{ kubelet_ca_cert }}", dest: /etc/kubelet/ca.pem}
+  notify: restart kubelet
+
+- name: Copy host certificate
+  copy: {content: "{{ kubelet_host_cert }}", dest: /etc/kubelet/host.crt}
+  notify: restart kubelet
+
+- name: Copy host key
+  copy: {content: "{{ kubelet_host_key }}", dest: /etc/kubelet/host.key}
+  notify: restart kubelet
+
+- name: Start service
+  systemd: {state: started, name: kubelet, daemon_reload: yes, enabled: yes}

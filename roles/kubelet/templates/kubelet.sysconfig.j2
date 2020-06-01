@@ -1,0 +1,9 @@
+KUBELET_OPTIONS=\
+  --config=/etc/kubelet/kubelet.yaml \
+  --container-runtime=docker \
+  --image-pull-progress-deadline=2m \
+  --kubeconfig=/etc/kubelet/kubeconfig \
+  --register-node=true \
+  --register-with-taints="{{ kubelet_register_with_taints | default([]) | join(",") }}" \
+  --node-labels="{{ kubelet_node_labels | default([]) | join(",") }}" \
+  --v=2

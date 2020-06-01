@@ -1,0 +1,25 @@
+- name: Install packages
+  yum: {name: "{{ etcd_package }}", state: present}
+
+- name: Copy CA certificate
+  copy: {content: "{{ etcd_ca_cert }}", dest: /etc/etcd/ca.pem}
+  notify: restart etcd
+
+- name: Copy host certificate
+  copy: {content: "{{ etcd_host_cert }}", dest: /etc/etcd/host.crt}
+  notify: restart etcd
+
+- name: Copy host key
+  copy: {content: "{{ etcd_host_key }}", dest: /etc/etcd/host.key}
+  notify: restart etcd
+
+- name: Copy crl file
+  copy: {content: "{{ etcd_crl }}", dest: /etc/etcd/crl.pem}
+  notify: restart etcd
+
+- name: Configure
+  template: {src: etcd.conf.j2, dest: /etc/etcd/etcd.conf}
+  notify: restart etcd
+
+- name: Start service
+  service: {name: etcd, state: started, enabled: yes}

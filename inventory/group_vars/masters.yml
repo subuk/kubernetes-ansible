@@ -1,0 +1,57 @@
+roles:
+  - etcd
+  - kube_apiserver
+  - kube_controller_manager
+  - kube_scheduler
+  - kubelet
+  - kube_proxy
+  - docker
+
+etcd_package: etcd-3.3.11
+etcd_advertise_client_urls: "https://{{ ansible_ssh_host }}:2379"
+etcd_initial_advertise_peer_urls: "https://{{ ansible_ssh_host }}:2380"
+etcd_initial_cluster: k8s-1=https://192.168.29.81:2380,k8s-2=https://192.168.29.82:2380,k8s-3=https://192.168.29.83:2380
+etcd_initial_cluster_token: MTAyM2Rhcy0wZDlhc2BXQF8pISgtMjEwMzkxMjNhc2RmYHN
+
+etcd_ca_cert: '{{ lookup("file", "pki/ca.crt") }}'
+etcd_host_cert: '{{ lookup("file", "pki/issued/" + inventory_hostname_short + "-etcd.crt") }}'
+etcd_host_key: '{{ lookup("file", "pki/private/" + inventory_hostname_short + "-etcd.key") }}'
+etcd_crl: '{{ lookup("file", "pki/crl.pem") }}'
+
+kube_apiserver_advertise_address: "{{ ansible_default_ipv4.address }}"
+kube_apiserver_ca_cert: '{{ lookup("file", "pki/ca.crt") }}'
+kube_apiserver_host_cert: '{{ lookup("file", "pki/issued/kube-apiserver.crt") }}'
+kube_apiserver_host_key: '{{ lookup("file", "pki/private/kube-apiserver.key") }}'
+kube_apiserver_service_account_cert: '{{ lookup("file", "pki/issued/service-accounts.crt") }}'
+kube_apiserver_encryption_config_secret: gzcZZiQZoHCkffdxg1INjxitemw5V7ZC35XYbl1blpg=
+kube_apiserver_etcd_servers: https://192.168.29.81:2379,https://192.168.29.82:2379,https://192.168.29.83:2379
+kube_apiserver_service_cluster_ip_range: 10.32.0.0/24
+
+kube_controller_manager_ca_cert: '{{ lookup("file", "pki/ca.crt") }}'
+kube_controller_manager_ca_key: '{{ lookup("file", "pki/private/ca.key") }}'
+kube_controller_manager_service_account_key: '{{ lookup("file", "pki/private/service-accounts.key") }}'
+kube_controller_manager_cluster_cidr: 10.200.0.0/16
+kube_controller_manager_service_cluster_ip_range: 10.32.0.0/24
+kube_controller_manager_client_cert: '{{ lookup("file", "pki/issued/system:kube-controller-manager.crt") }}'
+kube_controller_manager_client_key: '{{ lookup("file", "pki/private/system:kube-controller-manager.key") }}'
+kube_controller_manager_server: https://127.0.0.1:6443
+
+kube_scheduler_cluster_name: main
+kube_scheduler_ca_cert: '{{ lookup("file", "pki/ca.crt") }}'
+kube_scheduler_client_cert: '{{ lookup("file", "pki/issued/system:kube-scheduler.crt") }}'
+kube_scheduler_client_key: '{{ lookup("file", "pki/private/system:kube-scheduler.key") }}'
+kube_scheduler_server: https://127.0.0.1:6443
+
+kubelet_ca_cert: '{{ lookup("file", "pki/ca.crt") }}'
+kubelet_host_cert: '{{ lookup("file", "pki/issued/system:node:" + inventory_hostname_short + ".crt") }}'
+kubelet_host_key: '{{ lookup("file", "pki/private/system:node:" + inventory_hostname_short + ".key") }}'
+kubelet_server: https://127.0.0.1:6443
+kubelet_register_with_taints: []
+kubelet_node_labels: []
+
+kube_proxy_ca_cert: '{{ lookup("file", "pki/ca.crt") }}'
+kube_proxy_host_cert: '{{ lookup("file", "pki/issued/system:kube-proxy.crt") }}'
+kube_proxy_host_key: '{{ lookup("file", "pki/private/system:kube-proxy.key") }}'
+kube_proxy_server: https://192.168.29.81:6443
+kube_proxy_mode: ipvs
+kube_proxy_cluster_cidr: 10.200.0.0/16

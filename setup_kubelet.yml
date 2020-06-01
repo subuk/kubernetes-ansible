@@ -1,0 +1,4 @@
+- name: Configure kubelet
+  hosts: role_kubelet
+  roles:
+    - {role: kubelet, tags: kubelet}

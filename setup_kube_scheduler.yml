@@ -1,0 +1,4 @@
+- name: Configure kuberneted apiserver
+  hosts: role_kube_scheduler
+  roles:
+    - {role: kube_scheduler, tags: kube_scheduler}

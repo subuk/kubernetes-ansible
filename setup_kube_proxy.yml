@@ -1,0 +1,4 @@
+- name: Configure kube_proxy
+  hosts: role_kube_proxy
+  roles:
+    - {role: kube_proxy, tags: kube_proxy}
